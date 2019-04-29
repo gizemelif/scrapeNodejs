@@ -1,15 +1,8 @@
 const rp = require('request-promise');
 const $ = require('cheerio');
 const potusParse = require('./potusParse');
-
 const url = 'https://www.tripadvisor.com.tr/Restaurants-g293974-Istanbul.html';
 
-const outputFile = 'data.json';
-const parsedResults = [];
-const pageLimit =50;
-
-let pageCounter = 0;
-let resultCount = 0;
 
 rp(url)
     .then(function(html){
@@ -20,6 +13,7 @@ rp(url)
         });
         tripUrls = tripUrls.filter(url => url !== undefined);
         console.log("len of trip urls", tripUrls.length);
+        
         return Promise.all(
             tripUrls.map(function(url){
                 console.log("potusing", url);
@@ -55,7 +49,7 @@ const getNumber = async(url)=>{
         console.error(error);
     }
 
-    Promise.all([nextPageLink]);
+    Promise.all([response,nextPageLink]);
 }
 const exportResults = (parsedResults) => {
     fs.writeFile(outputFile, JSON.stringify(parsedResults, null,4), (err) => {

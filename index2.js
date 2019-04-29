@@ -2,16 +2,16 @@ const rp = require('request-promise');
 const $ = require('cheerio');
 const potusParse = require('./potusParse');
 
-const url = 'https://www.tripadvisor.com.tr/Restaurants-g293974-Istanbul.html';
+let outlet_page_url = 'https://www.tripadvisor.com.tr/Restaurants-g293974-Istanbul.html';
 
 const getOutletInfo = async (outletUrl) => {
     console.log("getOutletInfo", outletUrl);
-    return await potusParse(url);
+    return await potusParse(outletUrl);
 }
 
 const getOutletLinks = async (url) => {
 
-    const html = await rp("https://www.tripadvisor.com.tr" + url);
+    const html = await rp(url);
 
     let outletUrls =[];
 
@@ -27,10 +27,12 @@ const getOutletLinks = async (url) => {
 let currentPage = 1;
 
 const getLastPageNumber = async () => {
-    const html = await rp("https://www.tripadvisor.com.tr" + url);
+    console.log("url is", outlet_page_url)
+    const html = await rp(outlet_page_url);
 
     const hrefs = $('.pageNumbers > a',html);
-    return hrefs[hrefs.length].attribs["data-page-number"];
+    console.log("len of hrefs", hrefs.length)
+    return hrefs[hrefs.length - 1].attribs["data-page-number"];
 };
 
 const getOutletPageLink = async (url) => {
@@ -43,6 +45,7 @@ const getOutletPageLink = async (url) => {
             currentPage++;
         }
     });
+    console.log("getoutletpagelink", href);
     return href;
 };
 
@@ -52,18 +55,20 @@ const getOutletPageLink = async (url) => {
     const lastPageNumber = await getLastPageNumber();
 
     for (let i = 1; i < lastPageNumber; i++) {
-        const pageLink = await getOutletPageLink(url);
+        const pageLink = await getOutletPageLink(outlet_page_url);
+        outlet_page_url = "https://www.tripadvisor.com.tr/" + pageLink;
+        console.log("page url", outlet_page_url)
 
-        const outletLinks = await getOutletLinks(pageLink);
+        const outletLinks = await getOutletLinks(outlet_page_url);
     
-    
-        const promises = outletLinks.forEach(async (outletLink) => {
-            console.log(await getOutletInfo(outletLink));
+        const promises = outletLinks.filter(link => link !== undefined).map(async (outletLink) => {
+            console.log(await getOutletInfo("https://www.tripadvisor.com.tr/" + outletLink))
         })
-    
+
+        await Promise.all([promises]);
     }
 
+    
 
-    Promise.all([promises]);
     
 })();

@@ -2,8 +2,7 @@
 const rp = require('request-promise');
 const $ = require('cheerio');
 //const potusParse = require('./potusParse')
-const url = 'https://www.tripadvisor.com.tr/Restaurants-g293974-Istanbul.html';
-
+//const url = 'https://www.tripadvisor.com.tr/Restaurants-g293974-Istanbul.html';
 const potusParse = function(url) {
     return new Promise((resolve, reject) => {
         return rp(url)
