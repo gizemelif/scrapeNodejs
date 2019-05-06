@@ -1,16 +1,18 @@
 
 const rp = require('request-promise');
 const $ = require('cheerio');
-//const potusParse = require('./potusParse')
-//const url = 'https://www.tripadvisor.com.tr/Restaurants-g293974-Istanbul.html';
+
+
 const potusParse = function(url) {
     return new Promise((resolve, reject) => {
         return rp(url)
         .then(function(html) {
+          const name =  $('.restaurantName .h1', html).text();
+          const address = $('.detail .street-address', html).text();
+          
           return resolve({
-            name: $('.restaurantName .h1', html).text(),
-            address: $('.detail .street-address', html).text(),
-            locationId: $('.is-hidden-mobile blEntry address ui_link',html).text()
+            name,
+            address
           });
         })
         .catch(reject);
