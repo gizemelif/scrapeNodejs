@@ -1,8 +1,10 @@
 const rp = require('request-promise');
 const $ = require('cheerio');
 const potusParse = require('./potusParse');
+const fs = require('fs');
 
 let outlet_page_url = 'https://www.tripadvisor.com.tr/Restaurants-g293974-Istanbul.html';
+
 
 
 const getOutletInfo = async (outletUrl) => {
@@ -29,11 +31,11 @@ const getOutletLinks = async (url) => {
 let currentPage = 1;
 
 const getLastPageNumber = async () => {
-    //console.log("url is", outlet_page_url)
+    console.log("url is", outlet_page_url)
     const html = await rp(outlet_page_url);
 
     const hrefs = $('.pageNumbers > a',html);
-    //console.log("len of hrefs", hrefs.length)
+    console.log("len of hrefs", hrefs.length)
     return hrefs[hrefs.length - 1].attribs["data-page-number"];
 };
 
@@ -47,7 +49,7 @@ const getOutletPageLink = async (url) => {
             currentPage++;
         }
     });
-    //console.log("getoutletpagelink", href);
+    console.log("getoutletpagelink", href);
     return href;
 };
 
@@ -55,22 +57,38 @@ const getOutletPageLink = async (url) => {
 (async () => {
    
     const lastPageNumber = await getLastPageNumber();
+    const arr = [];
 
     for (let i = 1; i < lastPageNumber; i++) {
         const pageLink = await getOutletPageLink(outlet_page_url);
         outlet_page_url = "https://www.tripadvisor.com.tr/" + pageLink;
-        //console.log("page url", outlet_page_url)
+        console.log("page url", outlet_page_url)
 
         const outletLinks = await getOutletLinks(outlet_page_url);
     
         const promises = outletLinks.filter(link => link !== undefined).map(async (outletLink) => {
-            //console.log(await getOutletInfo("https://www.tripadvisor.com.tr/" + outletLink))
+            arr.push(await getOutletInfo("https://www.tripadvisor.com.tr/" + outletLink))
         })
 
-        await Promise.all([promises]);
+        await Promise.all(promises);
     }
 
+    console.log("arr:", arr);
+    var file = fs.createWriteStream('tripadvisor.txt');
+    file.on('error',function(err){
+        if(err) console.log(err);
+        console.log("Successful");
+    });
+    file.write("[");
+    arr.forEach(function(v){
+
+        file.write(JSON.stringify(v) + ',\n');
+    });
+    file.write("]");
+    file.end();
 
 
     
 })();
+
+
