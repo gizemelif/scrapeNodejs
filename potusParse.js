@@ -2,22 +2,29 @@
 const rp = require('request-promise');
 const $ = require('cheerio');
 
+let i = 0;
 const potusParse = function(url) {
     return new Promise((resolve, reject) => {
         return rp(url)
         .then(function(html) {
-          const name =  $('.restaurantName .h1', html).text();
-          const address = $('.detail .street-address', html).text();
+          const outlet = {};
+          outlet.id = $('.blRow', html).attr()["data-locid"];
+          outlet.name =  $('.restaurantName .h1', html).text();
+          outlet.address = $('.detail .street-address', html).text();
+
           const maps = $('div.poiEntryWrapper .shownOnMap',html).data();
-          const maps_dict = [maps['lat'],maps['lng']];
-          
-          return resolve({
-            name,
-            address,
-            maps_dict
-          });
+          if (maps) {
+            outlet.longitude = maps["lng"];
+            outlet.latitude = maps["lat"];
+          }
+
+          console.warn("current outlet", i++, outlet.id,outlet.name,outlet.address);
+          return resolve(outlet);
         })
-        .catch(reject);
+        .catch((err) => {
+            console.error(err, "get outlet info")
+            return resolve({id: "undefined"})
+        });
     })
 };
 
